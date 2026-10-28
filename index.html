@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Google Earth Historical Time-Lapse Viewer (1994–2025)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Bar: Compact Title in Top-Left Corner -->
+    <header class="top-bar">
+      <div class="brand-card">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Google Earth Time-Lapse</h1>
+          <p>1994 – 2025 (17 Captures)</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Compact Active Capture Metadata HUD in Upper-Left with Collapsible Word Description -->
+    <aside class="date-hud" aria-live="polite">
+      <div class="date-hud-header">
+        <div id="dateBadge" class="date-badge">May 8, 1994</div>
+        <span id="seasonTag" class="season-tag">Mid-Spring</span>
+        <button type="button" id="btnToggleDesc" class="desc-toggle-btn" aria-expanded="true" title="Show or hide description">
+          Hide Info ▴
+        </button>
+      </div>
+      <div id="descCollapsible" class="desc-collapsible">
+        <div id="deltaInfo" class="delta-info">Baseline capture (Frame 1 of 17)</div>
+        <p id="captionText" class="caption-text">
+          Historical USGS black-and-white aerial baseline. Natural dark wetland/pond west of the main dirt road, with open rangeland and pastures across the central and southern basins prior to lake excavation or residential development.
+        </p>
+      </div>
+    </aside>
+
+    <!-- Main Pan & Zoom Imagery Viewport -->
+    <main id="viewport" class="viewport">
+      <div id="stageTransform" class="stage-transform">
+        <!-- Stacked imagery layers for active time-lapse -->
+        <div id="baseLayers"></div>
+
+        <!-- Comparison overlay layer for Split Curtain or Onion-Skin -->
+        <div id="compareLayer" class="compare-layer">
+          <img id="compareImg" src="8MAY1994.png" alt="Comparison Reference Frame" />
+        </div>
+      </div>
+
+      <!-- Draggable Split Curtain Handle (Directly in Viewport so Dates Always Stay in Viewing Window) -->
+      <div id="splitHandle" class="split-handle">
+        <!-- Left Side Date Control on Split Line -->
+        <div id="splitLeftLabel" class="split-label left-label split-ctrl-card">
+          <div class="split-ctrl-row">
+            <button type="button" id="btnSplitLeftPrev" class="split-step-btn" title="Previous date on left side">◀</button>
+            <div class="split-date-display" title="Click to choose left-side date">
+              <span class="split-year" id="splitLeftYear">May 8, 1994</span>
+              <select id="splitLeftSelect" class="split-hidden-select" aria-label="Select left split date"></select>
+            </div>
+            <button type="button" id="btnSplitLeftNext" class="split-step-btn" title="Next date on left side">▶</button>
+          </div>
+        </div>
+
+        <div class="split-knob" title="Drag left or right to move split line">⇔</div>
+
+        <!-- Right Side Date Control on Split Line -->
+        <div id="splitRightLabel" class="split-label right-label split-ctrl-card">
+          <div class="split-ctrl-row">
+            <button type="button" id="btnSplitRightPrev" class="split-step-btn" title="Previous date on right side">◀</button>
+            <div class="split-date-display" title="Click to choose right-side date">
+              <span class="split-year" id="splitRightYear">April 30, 2025</span>
+              <select id="splitRightSelect" class="split-hidden-select" aria-label="Select right split date"></select>
+            </div>
+            <button type="button" id="btnSplitRightNext" class="split-step-btn" title="Next date on right side">▶</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Floating Zoom Controls -->
+    <div class="zoom-controls" aria-label="Zoom Controls">
+      <button type="button" id="btnZoomIn" class="icon-btn" title="Zoom In">+</button>
+      <div id="zoomReadout" class="zoom-readout">100%</div>
+      <button type="button" id="btnZoomOut" class="icon-btn" title="Zoom Out">−</button>
+      <button type="button" id="btnZoomReset" class="icon-btn" title="Reset Pan &amp; Zoom">⟲</button>
+    </div>
+
+    <!-- Bottom Dock: Compact Filmstrip + Three Distinguishable Control Blocks -->
+    <footer class="bottom-dock">
+      <!-- Compact Filmstrip Row -->
+      <div id="filmstripDrawer" class="filmstrip-drawer open"></div>
+
+      <!-- Thin Interactive Timeline Scrubber -->
+      <div class="timeline-container">
+        <div id="timelineTrackBg" class="timeline-track-bg">
+          <div id="timelineProgress" class="timeline-progress"></div>
+        </div>
+        <div id="timelineNodes" class="timeline-nodes"></div>
+      </div>
+
+      <!-- Three Distinguishable Control Sections Under the Filmstrip -->
+      <div class="bottom-sections-row">
+        <!-- SECTION 1: TIMELAPSE CONTROLS BLOCK -->
+        <section id="blockSingle" class="control-block timelapse-block active-block" aria-label="Time-Lapse Controls">
+          <button type="button" class="block-mode-pill active" data-mode="single" title="Activate Time-Lapse View">
+            🕒 Time-Lapse
+          </button>
+
+          <div class="block-controls">
+            <button type="button" id="btnFirst" class="nav-btn" title="Jump to Earliest Date (Home)">⏮</button>
+            <button type="button" id="btnPrev" class="nav-btn" title="Step Backward in Time (Left Arrow)">◀</button>
+            <button type="button" id="btnPlay" class="nav-btn primary-play" title="Play / Pause Time-Lapse (Space)">
+              <span>▶</span> Play
+            </button>
+            <button type="button" id="btnNext" class="nav-btn" title="Step Forward in Time (Right Arrow)">▶</button>
+            <button type="button" id="btnLast" class="nav-btn" title="Jump to Latest Date (End)">⏭</button>
+            <span id="stepCounter" class="step-counter">1/17</span>
+
+            <div class="control-chip">
+              <label for="speedSelect">Speed:</label>
+              <select id="speedSelect">
+                <option value="2400">0.5x</option>
+                <option value="1400" selected>1.0x</option>
+                <option value="800">2.0x</option>
+                <option value="450">3.5x</option>
+              </select>
+            </div>
+
+            <label class="chip-checkbox" title="Smoothly crossfade between dates">
+              <input type="checkbox" id="chkCrossfade" checked />
+              Fade
+            </label>
+
+            <label class="chip-checkbox" title="Space timeline nodes proportionally to actual calendar time (1994–2025)">
+              <input type="checkbox" id="chkProportional" />
+              True Scale
+            </label>
+
+            <button type="button" id="btnFilmstrip" class="mini-btn active" title="Show or hide thumbnail filmstrip">
+              🎞️
+            </button>
+          </div>
+        </section>
+
+        <!-- SECTION 2: TIME SPLIT CONTROLS BLOCK -->
+        <section id="blockSplit" class="control-block split-block" aria-label="Time Split Controls">
+          <button type="button" class="block-mode-pill" data-mode="split" title="Activate Side-by-Side Time Split View">
+            ↔️ Time Split
+          </button>
+
+          <div class="block-controls">
+            <div class="dock-date-picker" title="Left Side Date">
+              <span class="picker-tag">L:</span>
+              <button type="button" id="btnDockSplitLeftPrev" class="dock-step-btn" title="Previous Left Date">◀</button>
+              <select id="dockSplitLeftSelect" class="dock-date-select" aria-label="Left Split Date"></select>
+              <button type="button" id="btnDockSplitLeftNext" class="dock-step-btn" title="Next Left Date">▶</button>
+            </div>
+
+            <div class="dock-date-picker" title="Right Side Date">
+              <span class="picker-tag right-tag">R:</span>
+              <button type="button" id="btnDockSplitRightPrev" class="dock-step-btn" title="Previous Right Date">◀</button>
+              <select id="dockSplitRightSelect" class="dock-date-select" aria-label="Right Split Date"></select>
+              <button type="button" id="btnDockSplitRightNext" class="dock-step-btn" title="Next Right Date">▶</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: LAYERS BLEND CONTROLS BLOCK -->
+        <section id="blockOnion" class="control-block onion-block" aria-label="Layers Blend Controls">
+          <button type="button" class="block-mode-pill" data-mode="onion" title="Activate Onion-Skin Layers Blend View">
+            Layers Blend
+          </button>
+
+          <div class="block-controls">
+            <div class="dock-date-picker" title="Overlay Comparison Date">
+              <span class="picker-tag">Ref:</span>
+              <select id="dockOnionSelect" class="dock-date-select" aria-label="Blend Reference Date"></select>
+            </div>
+
+            <div class="blend-slider-chip" title="Adjust Overlay Opacity">
+              <input type="range" id="onionSlider" min="0" max="100" value="50" aria-label="Blend Opacity" />
+              <span id="onionVal" class="blend-val">50%</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
